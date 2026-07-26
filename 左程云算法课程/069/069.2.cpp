@@ -106,3 +106,69 @@ public:
 //如何避免可变参数到0以下？
 //把可能小于零的参数做max(0,s)处理！
 //挂dp表的记忆化搜索其实还不太快，但好在已经过了 
+class Solution {
+public:
+    int mod = 1e9 + 7;
+    int dp[105][105][105];
+    int profitableSchemes(int n, int minProfit, vector<int>& group,
+                          vector<int>& profit) {
+        int m = group.size();
+        for(int i=0;i<=m;i++)
+        {
+            dp[i][0][0]=1;
+        }
+        for(int g=0;g<=n;g++)
+        {
+            dp[m][g][0]=1;
+        }
+        // 讨论第i种工作是否纳入计划,如果不纳入，考虑i+1往后的方案数
+        for (int i = m-1; i >= 0; i--) {
+            for (int g = 0; g <= n; g++) {
+                for (int p = 0; p <= minProfit; p++) {
+                    int p1 = dp[i + 1][g][p];
+                    int p2 = 0;
+                    if (g >= group[i]) {
+                        p2 = dp[i + 1][g - group[i]][max(0, p - profit[i])];
+                    }
+                    long long ans = (p1 % mod + p2 % mod) % mod;
+                    dp[i][g][p] = ans;
+                }
+            }
+        }
+        return dp[0][n][minProfit];
+    }
+};
+//简单类比改一下得到三维的从底到顶的递推DP
+//性能依然一般，再做空间压缩 
+class Solution {
+public:
+    int mod = 1e9 + 7;
+    int dp[105][105];
+    int profitableSchemes(int n, int minProfit, vector<int>& group,
+                          vector<int>& profit) {
+        int m = group.size();
+        dp[0][0]=1;   
+        for(int g=0;g<=n;g++)
+        {
+            dp[g][0]=1;
+        }
+        // 讨论第i种工作是否纳入计划,如果不纳入，考虑i+1往后的方案数
+        for (int i = m-1; i >= 0; i--) { 
+            for (int g = n; g >= 0; g--) {
+                for (int p = minProfit; p >=0; p--) {
+                    int p1 = dp[g][p];
+                    int p2 = 0;
+                    if (g >= group[i]) {
+                        p2 = dp[g - group[i]][max(0, p - profit[i])];
+                    }
+                    long long ans = (p1 % mod + p2 % mod) % mod;
+                    dp[g][p] = ans;
+                }
+            }
+        }
+        return dp[n][minProfit];
+    }
+};
+// 1.三维情况建立几何直观是容易的：我们只需要画切片图即可
+// 2.通过直观理解，我们可以发现空间压缩的重要前提是遍历顺序——我们必须让结果按照理想的顺序计算出来
+//本问题仍然属于三维费用背包问题 
